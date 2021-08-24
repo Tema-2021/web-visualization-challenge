@@ -1,37 +1,16 @@
 // Creating function for Data plotting (Bar, gauge, bubble)
 // Read JSON (samples.json)
-
-
-
 d3.json("samples.json").then(function (data) {
     console.log(data);
-
-
-
-    // filter sample values by id 
-    // var samples = data.samples.filter(s => s.otu_ids.toString() === otu_ids)[0];
-
-    // console.log(samples);
-
-
 
     //Define the variables for the samples
     var samples = data.samples;
     console.log(samples)
 
-    // Getting the top 10 
-    // var sampleIds = samples.otu_ids;
-    // console.log(sampleIds)
-
-    //var sampleValues = data.samples[0].sample_values;
-
     var otuid = data.names[0];
     console.log(otuid);
 
     updateCharts(otuid);
-
-    // var sampleValues = data.samples[0].sample_values;
-    // console.log(sampleValues);
 });
 
 
@@ -39,27 +18,19 @@ function updateCharts(otuid) {
 
     d3.json("samples.json").then(function (data) {
 
-
-        console.log('LOOK HERE!');
-        samples = data['samples'];
+        samples = data.samples.filter(s => s.id.toString() == otuid);
         metadata = data['metadata'];
         names = data['names'];
 
-        sampleValues = samples.filter(s => s['id'] == otuid)[0];
+        //sampleValues = samples.filter(s => s['id'] == otuid)[0];
+        sampleValues = samples[0].sample_values.slice(0, 10).reverse();
+        console.log(sampleValues)
         metadataValues = metadata.filter(m => m['id'] == otuid)[0];
 
         wfreq = metadataValues['wfreq'];
 
-        console.log('THIS IS SAMPLE VALUES RIGHT BELOW HERE!!!');
-        console.log(sampleValues);
-        //console.log(sampleIds)
-
-        // Sort the values in descending ordeer and slice the the data
-        let sorted = sampleValues['otu_ids'].sort(function (a, b) { return b - a }).slice(0, 10).reverse();
-        console.log(sorted)
-
         // get only top 10 otu ids for the plot OTU and reversing it. 
-        var top_OTU = sampleValues.otu_ids.slice(0, 10).reverse();
+        var top_OTU = samples[0].otu_ids.slice(0, 10).reverse();
         console.log(top_OTU)
 
         // get the otu id's to the desired form for the plot
@@ -68,16 +39,13 @@ function updateCharts(otuid) {
 
 
         // get the top 10 labels for the plot
-        var labels = sampleValues.otu_labels.slice(0, 10);
+        var labels = samples[0].otu_labels.slice(0, 10);
         console.log(labels)
-
-        // console.log(`Sample Values: ${sampleValues}`)
-        // console.log(`Id Values: ${top_OTU}`)
 
         //Setup of the horizontal bar chart
         // create trace variable for the horizontal bar plot
         var trace = {
-            x: sorted,
+            x: sampleValues,
             y: id_OTU,
             text: labels,
             marker: {
@@ -104,7 +72,6 @@ function updateCharts(otuid) {
         //Setup of the bubble chart
         //Define variables for the otu_ids
         var sampleIds = samples[0].otu_ids;
-        console.log('Yuuuhuuuu')
         console.log(sampleIds)
 
 
@@ -179,39 +146,49 @@ function updateCharts(otuid) {
 d3.json("samples.json").then(function (data) {
     console.log(data);
 
-    var metadata = data.metadata;
-    console.log(metadata)
+    //Define the variables for the samples
+    var samples = data.samples;
+    console.log(samples)
 
-    // get all metadata for an individual via filtering by selected id
-    var metaResult = metadata.filter(meta => meta.id)[1];
-    console.log(metaResult)
+    var otuid = data.names[0];
+    console.log(otuid);
 
-    // select demographic panel to put data
-    var demographicInfo = d3.select("#sample-metadata");
-    console.log(demographicInfo)
+    getDemoInfo(otuid);
 
-
-    // //need to empty the container each time this is called, otherwise the data will just be tacked on the end (append)
-    d3.select("#sample-metadata").html("");
-
-    // Put into html
-    Object.entries(metaResult).forEach((key) => {
-        demographicInfo.append("h5").text(key[0].toUpperCase() + ": " + key[1] + "\n");
-    });
 });
+function getDemoInfo(otuid) {
+
+    d3.json("samples.json").then(function (data) {
+        console.log(data);
+
+        // get all metadata for an individual via filtering by selected id
+        var metaResult = metadata.filter(meta => meta.id.toString() == otuid)[0];
+        console.log(metaResult)
+
+        // select demographic panel to put data
+        var demographicInfo = d3.select("#sample-metadata");
+        console.log(demographicInfo)
 
 
+        // //need to empty the container each time this is called, otherwise the data will just be tacked on the end (append)
+        d3.select("#sample-metadata").html("");
+
+        // Put into html
+        Object.entries(metaResult).forEach((key) => {
+            demographicInfo.append("h5").text(key[0].toUpperCase() + ": " + key[1] + "\n");
+
+        });
+    });
+
+}
 
 // create the function for the change event
-function optionChanged(id) {
-    //bar(id);
-    //bubble(id);
-    //gauge(id);
-    //demographicInfo(id);
+function optionChanged(otuid) {
 
     dropDown = d3.select('#selDataset').node();
     selected_otu = dropDown.value;
     updateCharts(selected_otu);
+    getDemoInfo(selected_otu);
 
 
 }
@@ -230,15 +207,7 @@ function init() {
             dropdown.append("option").text(name).property("value");
         });
 
-        // call the functions to display the data and the plots to the page
-        // bar(data.names[0]);
-        // bubble(data.names[0]);
-        // gauge(data.names[0]);
-        //demographicInfo(data.names[0]);
     });
 }
 
-
 init();
-
-
